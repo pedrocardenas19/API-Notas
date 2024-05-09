@@ -6,4 +6,5 @@ urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
     path('notas/', views.NotaLista.as_view(), name='nota-lista'),
     path('notas/<int:pk>/', views.NotaDetalle.as_view(), name='nota-detalle'),
+
 ]

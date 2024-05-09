@@ -8,6 +8,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from .models import Nota
 from .serializers import NotaSerializer
+from rest_framework.decorators import api_view, permission_classes
+
 
 class RegistroView(APIView):
     permission_classes = [AllowAny] 
@@ -48,22 +50,22 @@ class LoginView(APIView):
 class NotaLista(APIView):
     permission_classes = [IsAuthenticated]
 
+    def post(self, request):
+        if request.method == 'POST':
+            # Asociamos el usuario autenticado con la nota
+            request.data['usuario'] = request.user.id
+            
+            serializer = NotaSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def get(self, request):
         notas = Nota.objects.filter(usuario=request.user)
         serializer = NotaSerializer(notas, many=True)
         return Response(serializer.data)
 
-    def post(self, request):
-        # Crear una nueva instancia de Nota con el usuario actual
-        nueva_nota = Nota(usuario=request.user)
-        
-        # Inicializar el serializer con la nueva instancia de Nota y los datos de la solicitud
-        serializer = NotaSerializer(nueva_nota, data=request.data)
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
 
 class NotaDetalle(APIView):
     permission_classes = [IsAuthenticated]
@@ -91,3 +93,5 @@ class NotaDetalle(APIView):
         nota = self.get_nota(pk)
         nota.delete()
         return Response(status=204)
+
+
